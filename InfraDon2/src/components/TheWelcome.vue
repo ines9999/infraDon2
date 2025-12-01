@@ -60,6 +60,7 @@ const synchroLocalDistant = () => {
   })
 }
 
+// Create
 const addDocument = () => {
   const doc = {
     post_name: 'rwe',
@@ -70,6 +71,7 @@ const addDocument = () => {
     fetchData()
   })
 }
+
 
 // Récupération des données
 const fetchData = () => {
@@ -86,6 +88,37 @@ const fetchData = () => {
     .catch((err) => {
       console.log(err)
     })
+
+// Update
+const updateDocument = (id, updatedFields) => {
+  storage.value.get(id).then((doc) => {
+    Object.assign(doc, updatedFields)
+    return storage.value.put(doc)
+  }).then(fetchData)
+}
+
+//Delete
+const deleteDocument = (id) => {
+  storage.value.get(id).then((doc) => {
+    return storage.value.remove(doc)
+  }).then(fetchData)
+}
+
+//Indexation
+storage.value.createIndex({ index: { fields: ['post_name'] } })
+
+//Fonction de recherche
+const searchPosts = async (keyword) => {
+  const result = await storage.value.find({
+    selector: { post_name: { $regex: keyword } },
+  })
+  postsData.value = result.docs
+}
+
+//Mode Offline
+const isOnline = ref(true)
+
+
 
   // TODO Récupération des données
   // https://pouchdb.com/api.html#batch_fetch
@@ -111,6 +144,7 @@ const increment = () => {
     <h1>Welcome</h1>
     <p>Counter: {{ counter }}</p>
     <button @click="increment">+1</button>
+    <button @click="isOnline = !isOnline"> {{ isOnline ? 'Passer hors ligne' : 'Revenir en ligne' }}</button>
     <h1>Fetch Data</h1>
     <article v-for="post in postsData" :key="(post as any).id">
       <h2>{{ post.post_name }}</h2>
@@ -118,5 +152,8 @@ const increment = () => {
     </article>
     <button @click="addDocument">add document</button>
     <button @click="synchroLocalDistant">Synchro</button>
-  </div>
+    <button @click="updateDocument(post._id, { post_name: 'nouveau titre' })">Modifier</button>
+    <button @click="deleteDocument(post._id)">Supprimer</button>
+
+ </div>
 </template>
