@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import PouchDB from 'pouchdb'
 import { onMounted, ref } from 'vue'
+import PouchDBFind from "pouchdb-find";
+PouchDB.plugin(PouchDBFind);
 
 declare interface Post {
+  _id?: string
+  _rev?: string
   post_name: string
   post_content: string
   attributes: {
@@ -88,9 +92,10 @@ const fetchData = () => {
     .catch((err) => {
       console.log(err)
     })
+}
 
 // Update
-const updateDocument = (id, updatedFields) => {
+const updateDocument = (id: string, updatedFields: any) => {
   storage.value.get(id).then((doc) => {
     Object.assign(doc, updatedFields)
     return storage.value.put(doc)
@@ -98,14 +103,17 @@ const updateDocument = (id, updatedFields) => {
 }
 
 //Delete
-const deleteDocument = (id) => {
+const deleteDocument = (id: string) => {
   storage.value.get(id).then((doc) => {
     return storage.value.remove(doc)
   }).then(fetchData)
 }
 
 //Indexation
-storage.value.createIndex({ index: { fields: ['post_name'] } })
+
+const createIndex = () => {
+  storage.value.createIndex({ index: { fields: ['post_name'] } })
+}
 
 //Fonction de recherche
 const searchPosts = async (keyword) => {
@@ -120,16 +128,17 @@ const isOnline = ref(true)
 
 
 
-  // TODO Récupération des données
-  // https://pouchdb.com/api.html#batch_fetch
-  // Regarder l'exemple avec function allDocs
-  // Remplir le tableau postsData avec les données récupérées
-  // faire l'indexation pour la recherche (c'est quoi ? aucune idée)
-}
+// TODO Récupération des données
+// https://pouchdb.com/api.html#batch_fetch
+// Regarder l'exemple avec function allDocs
+// Remplir le tableau postsData avec les données récupérées
+// faire l'indexation pour la recherche (c'est quoi ? aucune idée)
+
 
 onMounted(() => {
   console.log('=> Composant initialisé')
   initDatabase()
+  createIndex()
 })
 
 const counter = ref(110)
@@ -149,11 +158,11 @@ const increment = () => {
     <article v-for="post in postsData" :key="(post as any).id">
       <h2>{{ post.post_name }}</h2>
       <p>{{ post.post_content }}</p>
+      <button @click="updateDocument(post._id, { post_name: 'nouveau titre' })">Modifier</button>
+      <button @click="deleteDocument(post._id)">Supprimer</button>
     </article>
     <button @click="addDocument">add document</button>
     <button @click="synchroLocalDistant">Synchro</button>
-    <button @click="updateDocument(post._id, { post_name: 'nouveau titre' })">Modifier</button>
-    <button @click="deleteDocument(post._id)">Supprimer</button>
 
- </div>
+  </div>
 </template>
