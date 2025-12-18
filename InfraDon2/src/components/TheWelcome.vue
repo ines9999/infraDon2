@@ -86,7 +86,7 @@ const fetchData = () => {
     })
     .then((result) => {
       console.log('result', result)
-      postsData.value = result.rows.map((r) => r.doc)
+      postsData.value = result.rows.map((r) => r.doc).filter((doc) => !doc._id.startsWith("_"))
       // handle result
     })
     .catch((err) => {
@@ -116,16 +116,18 @@ const createIndex = () => {
 }
 
 //Fonction de recherche
-const searchPosts = async (keyword) => {
+const searchPosts = async (keyword: string) => {
   const result = await storage.value.find({
     selector: { post_name: { $regex: keyword } },
   })
-  postsData.value = result.docs
+  console.log(result.docs)
+  console.log('result', result.docs)
+  postsData.value = result.docs;
 }
 
 //Mode Offline
 const isOnline = ref(true)
-
+const searchKeyword = ref('')
 
 
 // TODO Récupération des données
@@ -134,6 +136,10 @@ const isOnline = ref(true)
 // Remplir le tableau postsData avec les données récupérées
 // faire l'indexation pour la recherche (c'est quoi ? aucune idée)
 
+const onInputChanged = (event) => {
+  searchPosts(searchKeyword.value)
+  console.log('event', event)
+}
 
 onMounted(() => {
   console.log('=> Composant initialisé')
@@ -152,15 +158,20 @@ const increment = () => {
   <div>
     <h1>Welcome</h1>
     <p>Counter: {{ counter }}</p>
+    <input type="text" v-model="searchKeyword" @change="onInputChanged"></input>
     <button @click="increment">+1</button>
     <button @click="isOnline = !isOnline"> {{ isOnline ? 'Passer hors ligne' : 'Revenir en ligne' }}</button>
     <h1>Fetch Data</h1>
-    <article v-for="post in postsData" :key="(post as any).id">
-      <h2>{{ post.post_name }}</h2>
-      <p>{{ post.post_content }}</p>
-      <button @click="updateDocument(post._id, { post_name: 'nouveau titre' })">Modifier</button>
-      <button @click="deleteDocument(post._id)">Supprimer</button>
-    </article>
+    <ol>
+      <li v-for="post in postsData" :key="(post as any)._id">
+        <article>
+          <h2>{{ post.post_name }}</h2>
+          <p>{{ post.post_content }}</p>
+          <button @click="updateDocument(post._id, { post_name: 'nouveau titre' })">Modifier</button>
+          <button @click="deleteDocument(post._id)">Supprimer</button>
+        </article>
+      </li>
+    </ol>
     <button @click="addDocument">add document</button>
     <button @click="synchroLocalDistant">Synchro</button>
 
