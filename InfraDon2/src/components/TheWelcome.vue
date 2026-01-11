@@ -139,6 +139,7 @@
   // NOUVELLES VARIABLES POUR LES FONCTIONNALITÉS AJOUTÉES
   const syncHandler = ref<any>(null)
   const commentsVisible = ref<{ [key: string]: boolean }>({})
+  const commentInputs = ref<{ [key: string]: string }>({})
   const topLikedPosts = ref<Post[]>([])
 
   // mode offline FONCTIONNEL
@@ -397,11 +398,11 @@
 
               <div v-if="commentsVisible[post._id]">
                 <input
-                  :id="'comment-' + post._id"
+                  v-model="commentInputs[post._id]"
                   type="text"
                   placeholder="Ajouter un commentaire..."
                 />
-                <button @click="addComment(post._id, (document.getElementById('comment-' + post._id) as HTMLInputElement).value); (document.getElementById('comment-' + post._id) as HTMLInputElement).value = ''">
+                <button @click="() => { addComment(post._id, commentInputs[post._id]); commentInputs[post._id] = '' }">
                   Envoyer
                 </button>
 
